@@ -1,20 +1,21 @@
+import sys
 import pygame
+
+import os
+
+cwd = os.getcwd()  # Get the current working directory (cwd)
+files = os.listdir(cwd)  # Get all the files in that directory
+print("Files in %r: %s" % (cwd, files))
+
 
 SQUARESIZE = 80
 ROWS = 8
 COLS = 8
 
-bP_images = {"rook": pygame.transform.scale(pygame.image.load('./assets/bR.png'), (65, 60)), 
-              "knight": pygame.transform.scale(pygame.image.load('./assets/bN.png'), (65,60)),
-              "bishop": pygame.transform.scale(pygame.image.load('./assets/bB.png'), (65,60)),
-              "queen" :pygame.transform.scale(pygame.image.load('./assets/bQ.png'), (65,60)),
-              "king": pygame.transform.scale(pygame.image.load('./assets/bK.png'), (65,60)),
-              "pawn": pygame.transform.scale(pygame.image.load('./assets/bP.png'), (65,60))}
+pNAMES = ["bR", "bN", "bB", "bK", "bQ", "bP", 
+         "wR", "wN", "wB", "wK", "bQ", "bP"]
+images = {}
 
-wP_images = {"rook": pygame.transform.scale(pygame.image.load('./assets/wR.png'), (65, 60)), 
-              "knight": pygame.transform.scale(pygame.image.load('./assets/wN.png'), (65,60)),
-              "bishop": pygame.transform.scale(pygame.image.load('./assets/wB.png'), (65,60)),
-              "queen" :pygame.transform.scale(pygame.image.load('./assets/wQ.png'), (65,60)),
-              "king": pygame.transform.scale(pygame.image.load('./assets/wK.png'), (65,60)),
-              "pawn": pygame.transform.scale(pygame.image.load('./assets/wP.png'), (65,60))}  
+for piece in pNAMES:
+    images[piece] = pygame.transform.scale(pygame.image.load('chess/assets/' + piece + ".png"), (65, 60))            
 
