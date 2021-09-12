@@ -23,7 +23,7 @@ def calc_DI(board, piece, x, y, dir, reversed=1, valid_moves=[]):
     if piece.calc_diagonals(board, piece.x+dir, piece.y+dir*reversed, reversed):
         return valid_moves        
 
-def calc_all_moves(self, LR = True, UD = True, DI = False):
+def calc_all_moves(self, board, LR = True, UD = True, DI = False):
         moves = []
         for dir in (-1, 1):
             if LR and UD:
@@ -44,71 +44,73 @@ class Piece():
         self.pName = piece_name
 
 class Pawn(Piece):
-    def __init__(self, x, y, color, dir):
-        super().__init__(x, y, color, dir, "pawn")
+    def __init__(self, x, y, color, dir, pName):
+        super().__init__(x, y, color, dir, pName)
 
     def calc_moves(self, board):
+        valid_moves = []
         #check for capture moves
         if self.x not in (0,7):
             for side in (-1,1): #left side/right side
                 sidePiece = board[self.y+self.dir][self.x+side]
                 if sidePiece: 
                     if self.color != sidePiece.color or board[self.y][self.x+side]:
-                        self.valid_moves.append((self.x+side, self.y+self.dir))
+                        valid_moves.append((self.x+side, self.y+self.dir))
             
         #regular movement
         if self.y not in (0,7):
             if (self.y == 1 and self.color == (0,0,0)) or (self.y == 6 and self.color == (255,255,255)):
                 if not board[self.y+self.dir*2][self.x]:
-                    self.valid_moves.append((self.x, self.y+self.dir*2))
+                    valid_moves.append((self.x, self.y+self.dir*2))
                 elif not board[self.y+dir][self.x]:
-                    self.valid_moves.append((self.x, self.y+self.dir))
+                    valid_moves.append((self.x, self.y+self.dir))
 
-        return (calc_all_moves(self, False, False, True))
+        return valid_moves
 
 
 class Rook(Piece):
-    def __init__(self, x, y, dir, color):
-        super().__init__(x, y, color, dir, "rook")
+    def __init__(self, x, y, color, pName):
+        super().__init__(x, y, color, pName)
     
-    def calc_moves(self):
-        return (calc_all_moves(self, True, True, False))
+    def calc_moves(self, board):
+        return (calc_all_moves(self, board, True, True, False))
 
 
-class Knight():
-    def __init__(self, x, y, dir, color):
-        super().__init__(x, y, color, dir, "knight")
+class Knight(Piece):
+    def __init__(self, x, y, color, pName):
+        super().__init__(x, y, color, pName)
     
     
-    def calc_moves(self):
+    def calc_moves(self, board):
         valid_moves = []
         dirs = [(-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1)]
         for dir in dirs:
             valid_moves.append((self.x + dir[0], self.y+dir[1]))
 
 
-class Bishop():
-    def __init__(self, x, y, dir, color):
-        super().__init__(x, y, color, dir, "bishop")
+class Bishop(Piece):
+    def __init__(self, x, y, color, pName):
+        super().__init__(x, y, color, pName)
     
-    def calc_moves(self):
-        return (calc_all_moves(self, False, False, True))
+    def calc_moves(self, board):
+        return (calc_all_moves(self, board, False, False, True))
 
 
 class Queen(Piece):
-    def __init__(self, x, y, dir, color):
-        super().__init__(x, y, color, dir, "queen")
+    def __init__(self, x, y, color, pName):
+        super().__init__(x, y, color, pName)
 
-    def calc_moves(self): 
-        return (calc_all_moves(self, True, True, True))
+    def calc_moves(self, board): 
+        return (calc_all_moves(self, board, True, True, True))
 
 
 class King(Piece):
-    def __init__(self, x, y, color):
-        super().__init__(x, y, color, "king")
+    def __init__(self, x, y, color, pName):
+        super().__init__(x, y, color, pName)
 
-    def calc_moves(self):
+    def calc_moves(self, board):
         valid_moves = []
         dirs = list(permutations([0, -1, 1], 2))
         for dir in dirs:
             valid_moves.append((self.x + dir[0], self.y+dir[1]))
+
