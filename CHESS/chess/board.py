@@ -1,8 +1,7 @@
-from chess.pieces import bishop, king
-from .pieces import *
-from .constants import *
+from pieces.pieces import *
+from constants import *
 
-bPieces = [rook.Rook, knight.Knight, bishop.Bishop, queen.Queen, king.King, bishop.Bishop, knight.Knight, rook.Rook]
+bPieces = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
 wPieces = bPieces[::-1]
 
 
@@ -29,33 +28,25 @@ class Board():
             for col in range(8):
                 if row < 2:
                     if row == 0:
-                        board[row].append(bPieces[col](col, row, (0,0,0)))
+                        board[row].append(bPieces[col](col, row, (0,0,0), "w" + bPieces[col].__name__[0]))
                     else:
-                        board[row].append(pawn.Pawn(col, row, (0,0,0), 1))
+                        board[row].append(Pawn(col, row, (0,0,0), 1, "w" + bPieces[col].__name__[0]))
                 elif row > 5:
                     if row == 7:
-                        board[row].append(wPieces[col](col, row, (255,255,255)))
+                        board[row].append(wPieces[col](col, row, (255,255,255), "b" + bPieces[col].__name__[0]))
                     else: 
-                        board[row].append(pawn.Pawn(col, row, (255,255,255), -1))
+                        board[row].append(Pawn(col, row, (255,255,255), -1), "b" + bPieces[col].__name__[0])
                 else:
                     board[row].append(0)
         self.draw_pieces()
 
 
     def draw_pieces(self):
-        board = self.board_layout
-        for row in board:
+        for row in self.board_layout:
             for piece in row:
                 if piece:
-                    if piece.color == (0,0,0):
-                        for bPiece in bP_images:
-                            if bPiece == piece.pName:
-                                self.win.blit(bP_images[bPiece], (((piece.x*80 + 40) - bP_images[bPiece].get_width()//2, (piece.y*80 + 40) - bP_images[bPiece].get_height()//2)))
-                    else:
-                        for wPiece in wP_images:
-                            if wPiece == piece.pName:
-                                self.win.blit(wP_images[wPiece], (((piece.x*80 + 40) - bP_images[bPiece].get_width()//2, (piece.y*80 + 40) - bP_images[bPiece].get_height()//2)))
-    
+                    self.win.blit(images[piece.pName], (((piece.x*80 + 40) - images[piece.pName].get_width()//2, (piece.y*80 + 40) - images[piece.pName].get_height()//2)))
+                
     
     def draw_moves(self, valid_moves):
         print(valid_moves)
@@ -78,10 +69,11 @@ class Board():
                     self.undraw_moves(self.selected.valid_moves)            
                     self.selected.valid_moves.clear()
                 self.selected = piece
-                self.draw_moves(self.selected.calc_moves(self.board_layout))
+                self.draw_moves(self.selected.calc_moves(self, self.board_layout))
 
                     
         #else:
 
 
 #move function: see if opponent piece's new pos puts enemy's king in danger 
+
