@@ -12,10 +12,10 @@ SQUARESIZE = 80
 ROWS = 8
 COLS = 8
 
-pNAMES = ["bR", "bN", "bB", "bK", "bQ", "bP", 
-         "wR", "wN", "wB", "wK", "bQ", "bP"]
+pNAMES = ["bR", "bH", "bB", "bK", "bQ", "bP", 
+         "wR", "wH", "wB", "wK", "wQ", "wP"]
 images = {}
 
 for piece in pNAMES:
+    print(piece)
     images[piece] = pygame.transform.scale(pygame.image.load('chess/assets/' + piece + ".png"), (65, 60))            
-
