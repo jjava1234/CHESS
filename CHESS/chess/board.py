@@ -1,7 +1,7 @@
 from pieces.pieces import *
 from constants import *
 
-bPieces = [Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook]
+bPieces = [Rook, Horse, Bishop, Queen, King, Bishop, Horse, Rook]
 wPieces = bPieces[::-1]
 
 
@@ -28,24 +28,18 @@ class Board():
             for col in range(8):
                 if row < 2:
                     if row == 0:
-                        board[row].append(bPieces[col](col, row, (0,0,0), "w" + bPieces[col].__name__[0]))
+                        board[row].append(bPieces[col](col, row, (0,0,0), "w" + bPieces[col].__name__[0], self.win))
                     else:
-                        board[row].append(Pawn(col, row, (0,0,0), 1, "w" + bPieces[col].__name__[0]))
+                        board[row].append(Pawn(col, row, (0,0,0), 1, "wP", self.win))
                 elif row > 5:
                     if row == 7:
-                        board[row].append(wPieces[col](col, row, (255,255,255), "b" + bPieces[col].__name__[0]))
+                        board[row].append(wPieces[col](col, row, (255,255,255), "b" + bPieces[col].__name__[0], self.win))
                     else: 
-                        board[row].append(Pawn(col, row, (255,255,255), -1), "b" + bPieces[col].__name__[0])
+                        board[row].append(Pawn(col, row, (255,255,255), -1, "bP", self.win))
                 else:
                     board[row].append(0)
-        self.draw_pieces()
+    
 
-
-    def draw_pieces(self):
-        for row in self.board_layout:
-            for piece in row:
-                if piece:
-                    self.win.blit(images[piece.pName], (((piece.x*80 + 40) - images[piece.pName].get_width()//2, (piece.y*80 + 40) - images[piece.pName].get_height()//2)))
                 
     
     def draw_moves(self, valid_moves):
@@ -69,11 +63,10 @@ class Board():
                     self.undraw_moves(self.selected.valid_moves)            
                     self.selected.valid_moves.clear()
                 self.selected = piece
-                self.draw_moves(self.selected.calc_moves(self, self.board_layout))
+                self.draw_moves(self.selected.calc_moves(self.board_layout))
 
                     
         #else:
 
 
 #move function: see if opponent piece's new pos puts enemy's king in danger 
-
