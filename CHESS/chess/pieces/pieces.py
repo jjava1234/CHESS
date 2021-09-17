@@ -5,54 +5,47 @@ from threading import Lock
 lock = Lock()
 
 #LEFT / RIGHT
-def calc_LR(board, piece, x, y, dir, moves=[]):    
-    if -1 > x > 8 and -1 > y > 8:
-        moves.append((x, y))
+def calc_LR(board, piece, movesList, x, y, dir):    
+    if -1 < x < 8 and -1 < y < 8:
+        if board[y][x] and board[y][x].color == piece.color:
+            return movesList        
+        movesList.append((x, y))
         if not board[y][x]:
-            return piece.calc_LR[dir][x+dir]
-    if moves:
-        return moves
-    return []
+            return calc_LR(board, piece, movesList, x+dir, y, dir)
+    return movesList
 
 # UP / DOWN
-def calc_UD(board, piece, x, y, dir, moves=[]):    
-    if -1 > x > 8 and -1 > y > 8:
-        moves.append((x, y))
+def calc_UD(board, piece, movesList, x, y, dir): 
+    if -1 < x < 8 and -1 < y < 8:
+        if board[y][x] and board[y][x].color == piece.color:
+            return movesList
+        movesList.append((x, y))
         if not board[y][x]:
-            return calc_UD(board, piece, x, y+dir, dir, moves)
-    if moves:
-        return moves
-    return []
+            return calc_UD(board, piece, movesList, x, y+dir, dir)
+    return movesList
 
 
 #DIAGONALS
-def calc_DI(board, piece, x, y, dir, reversed=1, moves=[]):
+def calc_DI(board, piece, movesList, x, y, dir, reversed=1):
     if -1 < x < 8 and -1 < y < 8:
-        if board[y][x] and board[y][x] == piece.color:
-            return []
-        moves.append((x,y))
+        if board[y][x] and board[y][x].color == piece.color:
+            return movesList
+        movesList.append((x,y))
         if not board[y][x]:
-            return calc_DI(board, piece, x+dir, y+dir*reversed, dir, reversed, moves)
-    if moves:
-        return moves
-    return []
+            return calc_DI(board, piece, movesList, x+dir, y+dir*reversed, dir, reversed)
+    return movesList
     
 
-def calc_all_moves(self, board, LR = True, UD = True, DI = False):
-
+def calc_all_moves(self, board, LR = False, UD = False, DI = False):
     moves = []
-
-    4,7
-
     for dir in (-1, 1):
         if LR and UD:
-            moves.extend(calc_UD(board, self, self.x, self.y+dir, dir))
-            moves.extend(calc_LR(board, self, self.x+dir, self.y, -1))
+            moves.extend(calc_UD(board, self, [], self.x, self.y+dir, dir))
+            moves.extend(calc_LR(board, self, [], self.x+dir, self.y, dir))
         if DI:
-            print("1 DIR:", dir, calc_DI(board, self, self.x+dir, self.y+dir, dir))
-            
-            print("2 DIR:",dir , calc_DI(board, self, self.x+dir, self.y+dir*-1, dir, -1))
-            print("3 DIR", dir, self.y, self.y+dir*-1)
+            moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir, dir))
+            moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir*-1, dir, -1))
+
     return moves
 
         
@@ -142,9 +135,9 @@ class King(Piece):
         for dir in dirs:
             x = self.x+dir[0]
             y = self.y+dir[1]
-            if 0 < y < 7 and 0 < x < 7 :
+            if -1 < y < 8 and -1 < x < 8 :
                 
                 if board[y][x] and self.color != board[y][x].color: 
                     moves.append((self.x + dir[0], self.y+dir[1]))
-
+        print(moves)
         return moves
