@@ -47,31 +47,36 @@ class Board():
 
 
     def captureCheck(self, move):
-        x, y = move[0], move[1]
-        if piece := self.board_layout[y][x]:
-            piece = 0
+        self.board_layout[move[1]][move[0]] = 0
     
     def switchTurn(self, game):
         game.turn = game.pColors[(game.pColors.index(game.turn)+1)%2]
 
+
     def movePiece(self, piece, oldIMAGES, move):
         oldIMAGES.append((piece.x, piece.y))
-        
-        self.captureCheck(move)
 
         if piece.pName[1] == "K":
             pass
         newX, newY = move[0], move[1]
-        self.board_layout[newY][newX], piece = piece, self.board_layout[newY][newX]
+        self.captureCheck(move)
+        print("why are you skipping")
+        self.board_layout[newY][newX], self.board_layout[piece.y][piece.x] = piece, self.board_layout[newY][newX]
         
-            #see if king's move gets him checked or 
-
+            #see if king's move gets him checked or
         piece = self.board_layout[newY][newX] 
         self.undraw(self.board_layout, oldIMAGES)
         piece.updatePIECE(self.win, (newX, newY))
-        
-
         #self.kingCheck()
+
+        for row in self.board_layout:
+            for piece in row:
+                if piece:
+                    print(piece.pName, end=" ")
+                else:
+                  print(0, end="  ")
+            print()
+
         self.switchTurn(self.game)
         
 
@@ -80,25 +85,23 @@ class Board():
             pygame.draw.circle(self.win, (0,0,255), (move[0]*80+40, move[1]*80+40), 15)
         return valid_moves
 
-    def undraw(self, board, positions, undrawMoves=False):
+    def undraw(self, board, positions):
         print(positions)
         colors = [(210,180,140), (111,78,55)]
         for pos in positions:
             pygame.draw.rect(self.win, colors[(pos[0]+pos[1])%2], (pos[0]*80, pos[1]*80, 80, 80))     
             
-            if undrawMoves and (piece := board[pos[1]][pos[0]]):
+            if (piece := board[pos[1]][pos[0]]) and board[pos[1]][pos[0]].color != self.game.turn:
                 piece.drawPIECE(self.win)
         self.selected.valid_moves.clear()
 
-    def captureCheck(self, piece):
-        pass
 
     def select(self, x, y):
         print(x//80,y//80)
         if (piece := self.board_layout[y//80][x//80]) and self.board_layout[y//80][x//80].color == self.game.turn:
             if self.selected != piece:
                 if self.selected:
-                    self.undraw(self.board_layout, self.selected.valid_moves, True) #undraw moves           
+                    self.undraw(self.board_layout, self.selected.valid_moves) #undraw moves           
                 self.selected = piece
                 self.selected.valid_moves = self.drawMOVES(self.selected.calc_moves(self.board_layout))
                 
