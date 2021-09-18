@@ -1,8 +1,5 @@
 from itertools import permutations
 from constants import images
-from threading import Lock
-
-lock = Lock()
 
 #LEFT / RIGHT
 def calc_LR(board, piece, movesList, x, y, dir):    
@@ -45,7 +42,7 @@ def calc_all_moves(self, board, LR = False, UD = False, DI = False):
         if DI:
             moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir, dir))
             moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir*-1, dir, -1))
-
+    
     return moves
 
         
@@ -56,36 +53,42 @@ class Piece():
         self.color = color
         self.valid_moves = []
         self.pName = piece_name
-        self.draw_piece(win)
+        self.drawPIECE(win)
 
-    def draw_piece(self, win):
+    def drawPIECE(self, win):
         win.blit(images[self.pName], (((self.x*80 + 40) - images[self.pName].get_width()//2, (self.y*80 + 40) - images[self.pName].get_height()//2)))
 
+
+    def updatePIECE(self, win, newPOS):
+        self.x, self.y = newPOS[0], newPOS[1]        
+        self.drawPIECE(win)
 
 class Pawn(Piece):
     def __init__(self, x, y, color, dir, pName, win):
         super().__init__(x, y, color, pName, win)
         self.dir = dir
 
-        
+    def ENEMEYPawnDJ(): #double jump
+        pass
+        #if self.ENEMYlastMove:
+            # or check it in move function
+
     def calc_moves(self, board):
         moves = []
-        #check for capture moves
+        #check for en passant moves 
         if self.x not in (0,7):
             for side in (-1,1): #left side/right side
                 sidePiece = board[self.y+self.dir][self.x+side]
-                if sidePiece: 
-                    if self.color != sidePiece.color or board[self.y][self.x+side]:
+                if sidePiece and self.color != sidePiece.color and self.ENEMYpawnDJ(): 
                         moves.append((self.x+side, self.y+self.dir))
             
-        #regular movement
+        #check for captures moves
         if self.y not in (0,7):
             if (self.y == 1 and self.color == (0,0,0)) or (self.y == 6 and self.color == (255,255,255)):
                 if not board[self.y+self.dir*2][self.x]:
                     moves.append((self.x, self.y+self.dir*2))
-                elif not board[self.y+dir][self.x]:
-                    moves.append((self.x, self.y+self.dir))
-        
+            if not board[self.y+self.dir][self.x]:
+                moves.append((self.x, self.y+self.dir))
         return moves
 
 
@@ -94,6 +97,7 @@ class Rook(Piece):
         super().__init__(x, y, color, pName, win)
     
     def calc_moves(self, board):
+        print("hello?")
         return calc_all_moves(self, board, True, True, False)
 
 #King and Knight starts with same letter
