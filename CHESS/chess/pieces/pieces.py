@@ -42,7 +42,7 @@ def calc_all_moves(self, board, LR = False, UD = False, DI = False):
         if DI:
             moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir, dir))
             moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir*-1, dir, -1))
-    
+
     return moves
 
         
@@ -97,7 +97,6 @@ class Rook(Piece):
         super().__init__(x, y, color, pName, win)
     
     def calc_moves(self, board):
-        print("hello?")
         return calc_all_moves(self, board, True, True, False)
 
 #King and Knight starts with same letter
@@ -107,7 +106,7 @@ class Horse(Piece):
     
     
     def calc_moves(self, board, moves=[]):
-        dirs = [(-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1)]
+        dirs = [(-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1)]
         for dir in dirs:
             if -1 < (y := self.y+dir[1]) < 8 and -1 < (x := self.x+dir[0]) < 8:
                 if not board[y][x] or self.color != board[y][x].color:     
@@ -139,9 +138,7 @@ class King(Piece):
         for dir in dirs:
             x = self.x+dir[0]
             y = self.y+dir[1]
-            if -1 < y < 8 and -1 < x < 8 :
-                
-                if board[y][x] and self.color != board[y][x].color: 
+            if -1 < y < 8 and -1 < x < 8:
+                if not board[y][x] or (board[y][x] and self.color != board[y][x].color): 
                     moves.append((self.x + dir[0], self.y+dir[1]))
-        print(moves)
         return moves
