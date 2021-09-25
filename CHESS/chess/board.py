@@ -10,9 +10,9 @@ class Board():
         self.board_layout = []
         self.selected = None
         self.game = game
+        self.enemyKing = [(4,0), (3,7)] 
+        self.check = False
         self.win = window
-        self.bK_pos = (4,0)
-        self.wK_pos = (3,7)
         self.create_board()
  
 
@@ -46,39 +46,56 @@ class Board():
                     board[row].append(0)
 
 
-    def captureCheck(self, move):
+    def capture(self, move):
         self.board_layout[move[1]][move[0]] = 0
     
-    def switchTurn(self, game):
+    def validCheck(self, piece):
+        if piece.pName[1] != "K":
+            self.game.allMOVES[self.game.turn][piece] = piece.calc_moves(self.board_layout)
+            eKingPOS = self.enemyKing[self.game.pColors.index(self.game.turn)]
+            
+            for move in self.game.allMOVES[self.game.turn].items():
+                if eKingPOS in move[1]:
+                    self.check = True
+                    print("CHECK!!!!!")
+        else:       
+            
+
+    def nextTurn(self, game):
         game.turn = game.pColors[(game.pColors.index(game.turn)+1)%2]
 
 
     def movePiece(self, piece, oldIMAGES, move):
+        
         oldIMAGES.append((piece.x, piece.y))
 
-        if piece.pName[1] == "K":
-            pass
+        #if piece.pName[1] == "K":
+            #if self.check and (newX, newY) in self.check:
+            #    pass
+
         newX, newY = move[0], move[1]
-        self.captureCheck(move)
-        print("why are you skipping")
-        self.board_layout[newY][newX], self.board_layout[piece.y][piece.x] = piece, self.board_layout[newY][newX]
-        
-            #see if king's move gets him checked or
+        self.capture(move)
+        self.board_layout[newY][newX], self.board_layout[piece.y][piece.x] = piece, self.board_layout[newY][newX]        
+
         piece = self.board_layout[newY][newX] 
         self.undraw(self.board_layout, oldIMAGES)
         piece.updatePIECE(self.win, (newX, newY))
-        #self.kingCheck()
-
-        for row in self.board_layout:
-            for piece in row:
-                if piece:
-                    print(piece.pName, end=" ")
-                else:
-                  print(0, end="  ")
-            print()
-
-        self.switchTurn(self.game)
         
+        self.validCheck(piece)
+        
+            
+        # for row in self.board_layout:
+        #     for piece in row:
+        #         if piece:
+        #             print(piece.pName, end=" ")
+        #         else:
+        #           print(0, end="  ")
+        #     print()
+
+        print("check:", self.check)
+
+        self.nextTurn(self.game)
+        print("hey")    
 
     def drawMOVES(self, valid_moves):
         for move in valid_moves:
@@ -86,7 +103,6 @@ class Board():
         return valid_moves
 
     def undraw(self, board, positions):
-        print(positions)
         colors = [(210,180,140), (111,78,55)]
         for pos in positions:
             pygame.draw.rect(self.win, colors[(pos[0]+pos[1])%2], (pos[0]*80, pos[1]*80, 80, 80))     
@@ -97,7 +113,7 @@ class Board():
 
 
     def select(self, x, y):
-        print(x//80,y//80)
+        #if self.check:
         if (piece := self.board_layout[y//80][x//80]) and self.board_layout[y//80][x//80].color == self.game.turn:
             if self.selected != piece:
                 if self.selected:
@@ -105,14 +121,11 @@ class Board():
                 self.selected = piece
                 self.selected.valid_moves = self.drawMOVES(self.selected.calc_moves(self.board_layout))
                 
-        elif validMOVES := self.selected.valid_moves:
+        elif self.selected and (validMOVES := self.selected.valid_moves):
             if (x//80, y//80) in validMOVES:
-                self.movePiece(self.selected, self.selected.valid_moves, (x//80, y//80))
-
-                    
+                self.movePiece(self.selected, validMOVES, (x//80, y//80))
         #else:
 
 
 #move function: see if opponent piece's new pos puts enemy's king in danger 
-
 
