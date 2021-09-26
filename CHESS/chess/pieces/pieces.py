@@ -1,10 +1,14 @@
 from itertools import permutations
-from constants import images
+from constants import *
+
+enPASSANT = False
+pPIECE = {} #protected piece; i.e invalid enemy king move
 
 #LEFT / RIGHT
 def calc_LR(board, piece, movesList, x, y, dir):    
     if -1 < x < 8 and -1 < y < 8:
         if board[y][x] and board[y][x].color == piece.color:
+            pPIECE[piece] = (board[y][x].x, board[y][x].x)
             return movesList        
         movesList.append((x, y))
         if not board[y][x]:
@@ -15,6 +19,7 @@ def calc_LR(board, piece, movesList, x, y, dir):
 def calc_UD(board, piece, movesList, x, y, dir): 
     if -1 < x < 8 and -1 < y < 8:
         if board[y][x] and board[y][x].color == piece.color:
+            pPIECE[piece] = (board[y][x].x, board[y][x].x) 
             return movesList
         movesList.append((x, y))
         if not board[y][x]:
@@ -26,6 +31,7 @@ def calc_UD(board, piece, movesList, x, y, dir):
 def calc_DI(board, piece, movesList, x, y, dir, reversed=1):
     if -1 < x < 8 and -1 < y < 8:
         if board[y][x] and board[y][x].color == piece.color:
+            pPIECE[piece] = (board[y][x].x, board[y][x].x)
             return movesList
         movesList.append((x,y))
         if not board[y][x]:
@@ -42,7 +48,7 @@ def calc_all_moves(self, board, LR = False, UD = False, DI = False):
         if DI:
             moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir, dir))
             moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir*-1, dir, -1))
-
+    
     return moves
 
         
@@ -68,28 +74,21 @@ class Pawn(Piece):
         super().__init__(x, y, color, pName, win)
         self.dir = dir
 
-    def ENEMEYPawnDJ(): #double jump
-        pass
-        #if self.ENEMYlastMove:
-            # or check it in move function
+    def valid_DJ(self, moves): #double jump
+        if (self.y == 1 and self.color == (0,0,0)) or (self.y == 6 and self.color == (255,255,255)):
+            return (self.x, self.y+self.dir*2)
+    
+    def captureMoves(self, board, moves):
+        if not board[self.y+self.dir][self.x] and board[self.y+self.dir][self.x].color == self.color and self.y in (0,7):   
+            return (self.x, self.y+self.dir)
+ 
+    def enPASSANT(self, board, moves):
+        for side in (-1,1):
+            if self.y in (3,4) and enPASSANT and board[self.y][self.x+side]:
+                return (self.x, self.y)
 
     def calc_moves(self, board):
-        moves = []
-        #check for en passant moves 
-        if self.x not in (0,7):
-            for side in (-1,1): #left side/right side
-                sidePiece = board[self.y+self.dir][self.x+side]
-                if sidePiece and self.color != sidePiece.color and self.ENEMYpawnDJ(): 
-                        moves.append((self.x+side, self.y+self.dir))
-            
-        #check for captures moves
-        if self.y not in (0,7):
-            if (self.y == 1 and self.color == (0,0,0)) or (self.y == 6 and self.color == (255,255,255)):
-                if not board[self.y+self.dir*2][self.x]:
-                    moves.append((self.x, self.y+self.dir*2))
-            if not board[self.y+self.dir][self.x]:
-                moves.append((self.x, self.y+self.dir))
-        return moves
+        return [self.valid_DJ(), self.captureMoves, self.enPASSANT()]
 
 
 class Rook(Piece):
@@ -106,11 +105,17 @@ class Horse(Piece):
     
     
     def calc_moves(self, board, moves=[]):
-        dirs = [(-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1)]
+        dirs = [(-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1)]
         for dir in dirs:
             if -1 < (y := self.y+dir[1]) < 8 and -1 < (x := self.x+dir[0]) < 8:
-                if not board[y][x] or self.color != board[y][x].color:     
-                    moves.append((x, y))
+                if board[y][x]:
+                    if self.color != board[y][x].color:
+                        moves.append((x, y))
+                    else:
+                        pPIECE[self] = (x,y)
+                else:
+                    moves.append((x,y))
+
         return moves
 
 class Bishop(Piece):
@@ -139,6 +144,9 @@ class King(Piece):
             x = self.x+dir[0]
             y = self.y+dir[1]
             if -1 < y < 8 and -1 < x < 8:
-                if not board[y][x] or (board[y][x] and self.color != board[y][x].color): 
-                    moves.append((self.x + dir[0], self.y+dir[1]))
+                if not board[y][x] or self.color != board[y][x].color:
+                    moves.append((self.x + dir[0], self.y+dir[1]))                        
+                elif board[y][x]:
+                    pPIECE[self] = (board[y][x].x, board[y][x].x) 
+
         return moves
