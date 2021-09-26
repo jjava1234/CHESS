@@ -1,18 +1,19 @@
-from pieces import *
 from constants import *
+from pieces import *
 
 bPieces = [Rook, Horse, Bishop, Queen, King, Bishop, Horse, Rook]
 wPieces = bPieces[::-1]
 
 
 class Board():
-    def __init__(self, window, game):
-        self.board_layout = []
+    def __init__(self, window, game, pPiece, ):
+        self.board_layout = pPIECE = []
         self.selected = None
         self.game = game
-        self.enemyKing = [(4,0), (3,7)] 
-        self.check = False
+        self.KingsPOS = [(3,7), (4,0)] 
         self.win = window
+        self.check = False
+        self.enPASSANT = []
         self.create_board()
  
 
@@ -52,13 +53,10 @@ class Board():
     def validCheck(self, piece):
         if piece.pName[1] != "K":
             self.game.allMOVES[self.game.turn][piece] = piece.calc_moves(self.board_layout)
-            eKingPOS = self.enemyKing[self.game.pColors.index(self.game.turn)]
-            
+            eKingPOS = self.KingsPOS[(self.game.pColors.index(self.game.turn)+1)%2] #enemy king
             for move in self.game.allMOVES[self.game.turn].items():
                 if eKingPOS in move[1]:
                     self.check = True
-                    print("CHECK!!!!!")
-        else:       
             
 
     def nextTurn(self, game):
@@ -66,12 +64,13 @@ class Board():
 
 
     def movePiece(self, piece, oldIMAGES, move):
-        
-        oldIMAGES.append((piece.x, piece.y))
+        print(self.KingsPOS[(self.game.pColors.index(self.game.turn)+1)%2])
+        if self.check:
+            for eMOVES in self.game.allMOVES[self.game.pColors[(self.game.pColors.index(self.game.turn)+1)%2]].items():
+                if (move[0], move[1]) in eMOVES[1]:
+                    return
 
-        #if piece.pName[1] == "K":
-            #if self.check and (newX, newY) in self.check:
-            #    pass
+        oldIMAGES.append((piece.x, piece.y))
 
         newX, newY = move[0], move[1]
         self.capture(move)
@@ -113,19 +112,17 @@ class Board():
 
 
     def select(self, x, y):
-        #if self.check:
+        print((x//80,y//80), (self.KingsPOS[self.game.pColors.index(self.game.turn)]))
         if (piece := self.board_layout[y//80][x//80]) and self.board_layout[y//80][x//80].color == self.game.turn:
             if self.selected != piece:
                 if self.selected:
-                    self.undraw(self.board_layout, self.selected.valid_moves) #undraw moves           
+                    self.undraw(self.board_layout, self.selected.valid_moves) 
                 self.selected = piece
                 self.selected.valid_moves = self.drawMOVES(self.selected.calc_moves(self.board_layout))
                 
         elif self.selected and (validMOVES := self.selected.valid_moves):
+            print("we exist?")
             if (x//80, y//80) in validMOVES:
                 self.movePiece(self.selected, validMOVES, (x//80, y//80))
         #else:
-
-
-#move function: see if opponent piece's new pos puts enemy's king in danger 
 
