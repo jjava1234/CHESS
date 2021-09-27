@@ -1,6 +1,9 @@
 from itertools import permutations
 from constants import *
 
+from itertools import permutations
+from constants import *
+
 enPASSANT = False
 pPIECE = {} #protected piece; i.e invalid enemy king move
 
@@ -138,7 +141,7 @@ class King(Piece):
     def __init__(self, x, y, color, pName, win):
         super().__init__(x, y, color, pName, win)
 
-    def calc_moves(self, board, moves=[]):
+    def calc_moves(self, board, moves=[], check = False):
         dirs = list(permutations([0, -1, -1, 1, 1], 2))
         for dir in dirs:
             x = self.x+dir[0]
@@ -147,6 +150,9 @@ class King(Piece):
                 if not board[y][x] or self.color != board[y][x].color:
                     moves.append((self.x + dir[0], self.y+dir[1]))                        
                 elif board[y][x]:
-                    pPIECE[self] = (board[y][x].x, board[y][x].x) 
+                    pPIECE[self] = (board[y][x].x, board[y][x].x)
 
+        #need to find a way to differentiate them
+        if check and len(moves) == 0:
+            return False
         return moves
