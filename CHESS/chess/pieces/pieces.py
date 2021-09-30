@@ -1,18 +1,21 @@
 from itertools import permutations
 from constants import *
 
-from itertools import permutations
-from constants import *
-
 enPASSANT = False
-pPIECE = {} #protected piece; i.e invalid enemy king move
+pSQUARE = set() # protected square; invalid enemy king move
+allMOVES = {(255,255,255):{}, (0,0,0):{}}
+
+#find a different solution
+pColors = [(255,255,255), (0,0,0)]
 
 #LEFT / RIGHT
 def calc_LR(board, piece, movesList, x, y, dir):    
     if -1 < x < 8 and -1 < y < 8:
-        if board[y][x] and board[y][x].color == piece.color:
-            pPIECE[piece] = (board[y][x].x, board[y][x].x)
-            return movesList        
+        if board[y][x]:
+            if board[y][x].color == piece.color:
+                return movesList
+            elif board[y][x].pName[1] == "K":
+                pSQUARE.add((x+dir,y))
         movesList.append((x, y))
         if not board[y][x]:
             return calc_LR(board, piece, movesList, x+dir, y, dir)
@@ -21,9 +24,11 @@ def calc_LR(board, piece, movesList, x, y, dir):
 # UP / DOWN
 def calc_UD(board, piece, movesList, x, y, dir): 
     if -1 < x < 8 and -1 < y < 8:
-        if board[y][x] and board[y][x].color == piece.color:
-            pPIECE[piece] = (board[y][x].x, board[y][x].x) 
-            return movesList
+        if board[y][x]:
+            if board[y][x].color == piece.color:
+                return movesList
+            elif board[y][x].pName[1] == "K":
+                pSQUARE.add((x,y+dir))
         movesList.append((x, y))
         if not board[y][x]:
             return calc_UD(board, piece, movesList, x, y+dir, dir)
@@ -33,9 +38,8 @@ def calc_UD(board, piece, movesList, x, y, dir):
 #DIAGONALS
 def calc_DI(board, piece, movesList, x, y, dir, reversed=1):
     if -1 < x < 8 and -1 < y < 8:
-        if board[y][x] and board[y][x].color == piece.color:
-            pPIECE[piece] = (board[y][x].x, board[y][x].x)
-            return movesList
+        if board[y][x] and board[y][x].color != piece.color and board[y][x].pName[1] =="K":
+            pSQUARE.add((x+dir,y+dir*reversed))
         movesList.append((x,y))
         if not board[y][x]:
             return calc_DI(board, piece, movesList, x+dir, y+dir*reversed, dir, reversed)
@@ -107,18 +111,16 @@ class Horse(Piece):
         super().__init__(x, y, color, pName, win)
     
     
-    def calc_moves(self, board, moves=[]):
+    def calc_moves(self, board):
+        moves = []
         dirs = [(-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1)]
         for dir in dirs:
             if -1 < (y := self.y+dir[1]) < 8 and -1 < (x := self.x+dir[0]) < 8:
                 if board[y][x]:
                     if self.color != board[y][x].color:
                         moves.append((x, y))
-                    else:
-                        pPIECE[self] = (x,y)
                 else:
                     moves.append((x,y))
-
         return moves
 
 class Bishop(Piece):
@@ -141,18 +143,18 @@ class King(Piece):
     def __init__(self, x, y, color, pName, win):
         super().__init__(x, y, color, pName, win)
 
-    def calc_moves(self, board, moves=[], check = False):
-        dirs = list(permutations([0, -1, -1, 1, 1], 2))
+    def calc_moves(self, board, check = False):
+        moves = []
+        dirs = list(set(permutations([0, -1, -1, 1, 1], 2)))
         for dir in dirs:
             x = self.x+dir[0]
             y = self.y+dir[1]
             if -1 < y < 8 and -1 < x < 8:
                 if not board[y][x] or self.color != board[y][x].color:
                     moves.append((self.x + dir[0], self.y+dir[1]))                        
-                elif board[y][x]:
-                    pPIECE[self] = (board[y][x].x, board[y][x].x)
-
+        
         #need to find a way to differentiate them
         if check and len(moves) == 0:
             return False
-        return moves
+        return list(set(moves).difference(pSQUARE, set(list(allMOVES[pColors[(pColors.index(self.color)+1)%2]].values())[0])))
+
