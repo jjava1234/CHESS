@@ -1,5 +1,5 @@
-from chess.board import Board
-from chess.game import Game
+from board import Board
+from game import Game
 import pygame
 
 win = pygame.display.set_mode((640,640))
@@ -17,4 +17,3 @@ while run:
             board.select(pos[0], pos[1])
 
     pygame.display.update()
-
