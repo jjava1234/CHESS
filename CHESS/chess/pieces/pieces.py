@@ -14,6 +14,7 @@ def calc_LR(board, piece, movesList, x, y, dir, getKING = None):
         if board[y][x]:
             if board[y][x].pName[1] == "K":
                 pSQUARE.add((x+dir,y))
+                lineOfSight.extend(calc_LR(board, piece, [], x+dir*-1, y, dir))
         movesList.append((x, y))
         if not board[y][x]:
             return calc_LR(board, piece, movesList, x+dir, y, dir)
@@ -27,6 +28,7 @@ def calc_UD(board, piece, movesList, x, y, dir, getKING = None):
         if board[y][x]:
             if board[y][x].pName[1] == "K":
                 pSQUARE.add((x,y+dir))
+                lineOfSight.extend(calc_UD(board, piece, [], x, y+dir*-1, dir))
         movesList.append((x, y))
         if not board[y][x]:
             return calc_UD(board, piece, movesList, x, y+dir, dir)
@@ -38,6 +40,8 @@ def calc_DI(board, piece, movesList, x, y, dir, reversed=1, getKING = None):
     if -1 < x < 8 and -1 < y < 8:
         if board[y][x] and board[y][x].color != piece.color and board[y][x].pName[1] =="K":
             pSQUARE.add((x+dir,y+dir*reversed))
+            lineOfSight.extend(calc_DI(board, piece, [], x+dir, y+dir, dir))
+
         movesList.append((x,y))
         if not board[y][x]:
             return calc_DI(board, piece, movesList, x+dir, y+dir*reversed, dir, reversed)
