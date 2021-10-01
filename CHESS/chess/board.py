@@ -5,15 +5,6 @@ bPieces = [Rook, Horse, Bishop, Queen, King, Bishop, Horse, Rook]
 wPieces = bPieces[::-1]
 
 
-
-from sys import _xoptions
-from constants import *
-from pieces import *
-
-bPieces = [Rook, Horse, Bishop, Queen, King, Bishop, Horse, Rook]
-wPieces = bPieces[::-1]
-
-
 class Board():
     def __init__(self, window, game):
         self.board_layout = pPIECE = []
@@ -67,10 +58,8 @@ class Board():
             eKingPOS = self.KingsPOS[(self.game.pColors.index(self.game.turn)+1)%2] #enemy king
             for move in allMOVES[self.game.turn].items():
                 if eKingPOS in move[1]:
-                    self.check.append((piece.x, piece.y))
-
-    def uncheck(self, piece):
-        pass
+                    self.check.append(piece)
+                    self.board_layout[eKingPOS[1]][eKingPOS[0]].drawPIECE(self.win, True)
 
     def nextTurn(self, game):
         game.turn = game.pColors[(game.pColors.index(game.turn)+1)%2]
@@ -85,8 +74,7 @@ class Board():
                     #return
 
                 #may replace above commented code
-                if piece.pName[1] == "K":
-                                        
+                if piece.pName[1] == "K":                     
                     #TODO: calc king's remaining moves; if none, call checkmate
                     if piece.calc_moves(self.board_layout):
                         pass
@@ -96,13 +84,17 @@ class Board():
                     pSQUARE.clear()
                     
                 else:
-                    allEnemyMOVES[eMOVES[0]] = eMOVES[0].calc_moves(self.board_layout)
-                    
+                        
+                    if move not in self.check or move:
+                        return
+                    eKingPOS = self.KingsPOS[(self.game.pColors.index(self.game.turn)+1)%2]
+                    allEnemyMOVES[eMOVES[0]] = eMOVES[0].calc_moves(self.board_layout, eKingPOS)
+
                     if self.KingsPOS[self.game.pColors.index(self.game.turn)] not in allEnemyMOVES.values():
                         self.check = []
                     #if move not in self.check or len(self.check) > 1: 
                     #    pass
-
+                        
         if piece.pName[1] == "K":
             self.KingsPOS[self.game.pColors.index(self.game.turn)] = move
 
@@ -124,9 +116,11 @@ class Board():
 
         self.nextTurn(self.game)
 
-    def drawMOVES(self, valid_moves):
+    def drawMOVES(self, piece, valid_moves):
         for move in valid_moves:
-            if not self.board_layout[move[1]][move[0]] or self.board_layout[move[1]][move[0]].color != self.game.turn:
+            if self.check and move not in self.check and piece.pName[1] != "K":
+                continue
+            elif not self.board_layout[move[1]][move[0]] or self.board_layout[move[1]][move[0]].color != self.game.turn:
                 pygame.draw.circle(self.win, (0,0,255), (move[0]*80+40, move[1]*80+40), 15)
         return valid_moves
 
@@ -145,7 +139,7 @@ class Board():
                 if self.selected:
                     self.undraw(self.board_layout, self.selected.valid_moves) 
                 self.selected = piece
-                self.selected.valid_moves = self.drawMOVES(self.selected.calc_moves(self.board_layout))
+                self.selected.valid_moves = self.drawMOVES(self.selected, self.selected.calc_moves(self.board_layout))
                 
         elif self.selected and (validMOVES := self.selected.valid_moves):
             if (x//80, y//80) in validMOVES:
