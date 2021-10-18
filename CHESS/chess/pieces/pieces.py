@@ -1,62 +1,60 @@
 import itertools
-from constants import *
-
-enPASSANT = False
-pSQUARE = set() # protected square; invalid enemy king move
-allMOVES = {(255,255,255):{}, (0,0,0):{}}
-lineOfSight = []
-#find a different solution
-pColors = [(255,255,255), (0,0,0)]
+import config
 
 #LEFT / RIGHT
-def calc_LR(board, piece, movesList, x, y, dir, getKING = None):    
+def calc_LR(board, piece, movesList, check, x, y, dir):    
     if -1 < x < 8 and -1 < y < 8:
-        if board[y][x]:
-            if board[y][x].pName[1] == "K":
-                pSQUARE.add((x+dir,y))
-                lineOfSight.extend(calc_LR(board, piece, [], x+dir*-1, y, dir))
+        if board[y][x] and board[y][x].pName[1] == "K":
+            if board[y][x].color != piece.color and not check:
+                config.pSQUARE.add((x+dir,y))
+                config.lineOfSight.extend(calc_LR(board, piece, [], True, x+dir*-1, y, dir*-1))
+            else:
+                return movesList
         movesList.append((x, y))
         if not board[y][x]:
-            return calc_LR(board, piece, movesList, x+dir, y, dir)
-    if getKING in movesList:
-        lineOfSight.extend(movesList)
+            return calc_LR(board, piece, movesList, check, x+dir, y, dir)
     return movesList
 
 # UP / DOWN
-def calc_UD(board, piece, movesList, x, y, dir, getKING = None): 
+def calc_UD(board, piece, movesList, check, x, y, dir): 
     if -1 < x < 8 and -1 < y < 8:
-        if board[y][x]:
-            if board[y][x].pName[1] == "K":
-                pSQUARE.add((x,y+dir))
-                lineOfSight.extend(calc_UD(board, piece, [], x, y+dir*-1, dir))
+        if board[y][x] and board[y][x].pName[1] == "K":
+            if board[y][x].color != piece.color and not check:
+                config.pSQUARE.add((x,y+dir))
+                config.lineOfSight.extend(calc_UD(board, piece, [], True, x, y+dir*-1, dir*-1))
+            else:
+                return movesList
         movesList.append((x, y))
         if not board[y][x]:
-            return calc_UD(board, piece, movesList, x, y+dir, dir)
+            return calc_UD(board, piece, movesList, check, x, y+dir, dir)
     return movesList
 
 
 #DIAGONALS
-def calc_DI(board, piece, movesList, x, y, dir, reversed=1, getKING = None):
+def calc_DI(board, piece, movesList, check, x, y, dir, reversed = 1):
     if -1 < x < 8 and -1 < y < 8:
-        if board[y][x] and board[y][x].color != piece.color and board[y][x].pName[1] =="K":
-            pSQUARE.add((x+dir,y+dir*reversed))
-            lineOfSight.extend(calc_DI(board, piece, [], x+dir, y+dir, dir))
-
+        if board[y][x] and board[y][x].pName[1] == "K":
+            if board[y][x].color != piece.color and not check:
+                config.pSQUARE.add((x+dir,y+dir))
+                config.lineOfSight.extend(calc_DI(board, piece, [], True, x+dir*-1, y+dir*reversed*-1, dir*-1, reversed))       
+            else:
+                return movesList
         movesList.append((x,y))
         if not board[y][x]:
-            return calc_DI(board, piece, movesList, x+dir, y+dir*reversed, dir, reversed)
+            return calc_DI(board, piece, movesList, check, x+dir, y+dir*reversed, dir, reversed)
     return movesList
     
 
-def calc_all_moves(self, board, LR = False, UD = False, DI = False):
+def calc_all_moves(self, board, check, LR = False, UD = False, DI = False):
     moves = []
     for dir in (-1, 1):
         if LR and UD:
-            moves.extend(calc_UD(board, self, [], self.x, self.y+dir, dir))
-            moves.extend(calc_LR(board, self, [], self.x+dir, self.y, dir))
+            moves.extend(calc_UD(board, self, [], check, self.x, self.y+dir, dir))
+            moves.extend(calc_LR(board, self, [], check, self.x+dir, self.y, dir))
         if DI:
-            moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir, dir))
-            moves.extend(calc_DI(board, self, [], self.x+dir, self.y+dir*-1, dir, -1))
+            moves.extend(calc_DI(board, self, [], check, self.x+dir, self.y+dir, dir))
+            moves.extend(calc_DI(board, self, [], check, self.x+dir, self.y+dir*-1, dir, -1))
+
     return moves
 
         
@@ -71,8 +69,8 @@ class Piece():
 
     def drawPIECE(self, win, check = False):
         if self.pName[1] == "K" and check:
-            pygame.draw.rect(win, (245, 64, 41), (self.x*80, self.y*80, 80, 80))
-        win.blit(images[self.pName], (((self.x*80 + 40) - images[self.pName].get_width()//2, (self.y*80 + 40) - images[self.pName].get_height()//2)))
+            config.pygame.draw.rect(win, (245, 64, 41), (self.x*80, self.y*80, 80, 80))
+        win.blit(config.images[self.pName], (((self.x*80 + 40) - config.images[self.pName].get_width()//2, (self.y*80 + 40) - config.images[self.pName].get_height()//2)))
 
 
     def updatePIECE(self, win, newPOS):
@@ -84,29 +82,47 @@ class Pawn(Piece):
         super().__init__(x, y, color, pName, win)
         self.dir = dir
 
-    def valid_DJ(self, moves): #double jump
-        if (self.y == 1 and self.color == (0,0,0)) or (self.y == 6 and self.color == (255,255,255)):
-            return (self.x, self.y+self.dir*2)
-    
-    def captureMoves(self, board, moves):
-        if not board[self.y+self.dir][self.x] and board[self.y+self.dir][self.x].color == self.color and self.y in (0,7):   
-            return (self.x, self.y+self.dir)
- 
-    def enPASSANT(self, board, moves):
-        for side in (-1,1):
-            if self.y in (3,4) and enPASSANT and board[self.y][self.x+side]:
-                return (self.x, self.y)
+    def valid_DJ(self, board): #double jump
+        moves = []
+        color = {1:(0,0,0), 6:(255,255,255)}
+        if self.y in (1,6) and self.color == color[self.y] and not board[self.y+self.dir*2][self.x]:
+            moves.append((self.x, self.y+self.dir*2))
+        return moves
 
-    def calc_moves(self, board):
-        return [self.valid_DJ(), self.captureMoves, self.enPASSANT()]
+    def captureMoves(self, board):
+        moves = []
+        for side in (-1, 1):
+            if self.x+side not in (-1,7):
+                if board[self.y+self.dir][self.x+side] and board[self.y+self.dir][self.x+side].color != self.color:   
+                    moves.append((self.x+side, self.y+self.dir))
+        return moves
+
+
+    def enPASSANT(self):
+        moves = []
+        for side in (-1,1):
+            if (self.x+side, self.y) == config.epMOVES:
+                moves.append((self.x+side, self.y+self.dir))
+        return moves
+
+    def forward(self, board, check):
+        moves = []
+        newY= self.y + self.dir
+        if not board[newY][self.x]:
+            moves.append((self.x, newY))
+        return moves
+
+    def calc_moves(self, board, check):
+        moves = []
+        return list(config.flatten([self.forward(board, check), self.valid_DJ(board), self.captureMoves(board), self.enPASSANT()]))
 
 
 class Rook(Piece):
     def __init__(self, x, y, color, pName, win):
         super().__init__(x, y, color, pName, win)
     
-    def calc_moves(self, board):
-        return calc_all_moves(self, board, True, True, False)
+    def calc_moves(self, board, check = False):
+        return calc_all_moves(self, board, check, True, True, False)
 
 #King and Knight starts with same letter
 class Horse(Piece):     
@@ -114,7 +130,7 @@ class Horse(Piece):
         super().__init__(x, y, color, pName, win)
     
     
-    def calc_moves(self, board):
+    def calc_moves(self, board, check = False):
         moves = []
         dirs = [(-1, 2), (1, 2), (2, 1), (2, -1), (1, -2), (-1, -2), (-2, -1), (-2, 1)]
         for dir in dirs:
@@ -130,21 +146,29 @@ class Bishop(Piece):
     def __init__(self, x, y, color, pName, win):
         super().__init__(x, y, color, pName, win)
     
-    def calc_moves(self, board):
-        return calc_all_moves(self, board, False, False, True)
+    def calc_moves(self, board, check = False):
+        return calc_all_moves(self, board, check, False, False, True)
 
 
 class Queen(Piece):
     def __init__(self, x, y, color, pName, win):
         super().__init__(x, y, color, pName, win)
 
-    def calc_moves(self, board): 
-        return calc_all_moves(self, board, True, True, True)
+    def calc_moves(self, board, check = False): 
+        return calc_all_moves(self, board, check, True, True, True)
             
 
 class King(Piece):
     def __init__(self, x, y, color, pName, win):
         super().__init__(x, y, color, pName, win)
+
+    def calc_safety(self, board, check):
+        for pos in calc_all_moves(self, board, False, True, True, True):
+            x = pos[0]
+            y = pos[1]
+            if board[y][x] and (self.x, self.y) in board[y][x].calc_moves(board, check):
+                check.append((x, y))
+            
 
     def calc_moves(self, board, check = False):
         moves = []
@@ -155,10 +179,10 @@ class King(Piece):
             if -1 < y < 8 and -1 < x < 8:
                 if not board[y][x] or self.color != board[y][x].color:
                     moves.append((self.x + dir[0], self.y+dir[1]))                        
-        
+    
         #need to find a way to differentiate them
         if check and len(moves) == 0:
             return False
-        eMOVES = list(itertools.chain.from_iterable(list(allMOVES[pColors[(pColors.index(self.color)+1)%2]].values())))
-        print(eMOVES)
-        return list(set(moves).difference(pSQUARE, eMOVES))
+        eMOVES = list(itertools.chain.from_iterable(list(config.allMOVES[config.pColors[(config.pColors.index(self.color)+1)%2]].values())))
+        return list(set(moves).difference(config.pSQUARE, eMOVES))
+
